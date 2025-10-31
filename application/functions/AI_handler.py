@@ -21,6 +21,12 @@ class AIHandler:
             or os.environ.get("OLLAMA_CHAT_MODEL")
             or "llama2:7b"
         )
+        # Default reasoning model: prefer explicit config, then env, then fallback
+        self.default_reason_model = (
+            self.config.get("default_reason_model")
+            or os.environ.get("OLLAMA_REASON_MODEL")
+            or "phi4-reasoning:14b"
+        )
         # Detect whether ollama CLI is available
         self.ollama_cli_path = shutil.which("ollama")
         # allow explicit config to disable CLI even if present
@@ -96,6 +102,7 @@ class AIHandler:
         """Return a small status dict used by the /ai/status endpoint."""
         return {
             "default_model": self.default_chat_model,
+            "default_reason_model": self.default_reason_model,
             "ollama_cli": bool(self.ollama_cli_path),
             "ollama_cli_path": self.ollama_cli_path,
             "use_ollama_cli": self.use_ollama_cli,
@@ -122,9 +129,23 @@ class AIHandler:
             return self._run_ollama_http(model_to_use, prompt)
         return {"text": "(no LLM backend configured — install ollama or set OLLAMA_HTTP_URL)"}
 
-    # Stubs for later features
     def reason(self, prompt: str, model: str = None) -> dict:
-        return {"text": "(reasoning not implemented yet)"}
+        """
+        Reasoning model call.
+        """
+        model_to_use = model or self.default_reason_model
+        # If configured to force CLI-only, require the CLI and do not fall back
+        if getattr(self, "force_cli_only", False):
+            if not self.use_ollama_cli:
+                return {"text": "(LLM error: Ollama CLI required but not available)"}
+            return self._run_ollama(model_to_use, prompt)
+
+        # Prefer CLI if available and enabled, otherwise fall back to HTTP endpoint.
+        if self.use_ollama_cli:
+            return self._run_ollama(model_to_use, prompt)
+        if self.use_ollama_http:
+            return self._run_ollama_http(model_to_use, prompt)
+        return {"text": "(no LLM backend configured — install ollama or set OLLAMA_HTTP_URL)"}
 
     def transcribe_audio(self, audio_bytes: bytes) -> str:
         return "(transcription not implemented)"

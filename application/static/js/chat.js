@@ -33,6 +33,7 @@ window.initChat = function initChat() {
   // Update references to the new elements
   const newInput = newForm.querySelector('#message-input');
   const newRecordBtn = newForm.querySelector('#record-btn');
+  const newReasonMode = newForm.querySelector('#reason-mode');
 
   newForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -43,10 +44,14 @@ window.initChat = function initChat() {
     newInput.value = '';
 
     try{
+      const formData = { message: text };
+      if (newReasonMode && newReasonMode.checked) {
+        formData.mode = 'reason';
+      }
       const res = await fetch(window.location.pathname || '/bot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ message: text })
+        body: new URLSearchParams(formData)
       });
       if(res.ok){
         const data = await res.json();
