@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Chatbot</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index_style.css') }}">
+    <script src="{{ url_for('static', filename='js/app_nav.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/info.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}" defer></script>
+</head>
+<body>
+    <header>
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('bot') }}">Bot</a>
+            <a href="{{ url_for('info') }}">Info</a>
+            <span id="current-user" class="current-user" aria-live="polite" style="margin-left:1rem; font-weight:600;"></span>
+        </nav>
+
+        <h1>Kjell</h1>
+        <p>Your friendly AI chatbot</p>
+    </header>
+    <main>
+        {% block content %}
+        <p>This is the main content area.</p>
+        {% endblock %}
+        <!-- Cookie consent banner -->
+        <div id="cookie-banner" class="cookie-banner" role="dialog" aria-live="polite" style="display:none;">
+            <div class="cookie-inner">
+                <p>We use cookies to improve your experience. Do you accept cookies for personalization and a better chat experience?</p>
+                <div class="cookie-actions">
+                    <button id="accept-cookies" class="btn">Accept</button>
+                    <button id="decline-cookies" class="btn btn-secondary">Decline</button>
+                </div>
+            </div>
+        </div>
+        <script>
+        (function(){
+            function readCookie(name){
+                const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+                return m ? decodeURIComponent(m[1]) : null;
+            }
+
+            function showBanner(){
+                const b = document.getElementById('cookie-banner');
+                if(b) b.style.display = 'block';
+                return b;
+            }
+
+            const consent = readCookie('consent');
+            if(consent !== 'true' && consent !== 'false'){
+                const b = showBanner();
+                const acceptBtn = document.getElementById('accept-cookies');
+                const declineBtn = document.getElementById('decline-cookies');
+
+                if(acceptBtn){
+                    acceptBtn.addEventListener('click', async function(){
+                        // immediately set a client-visible consent cookie so UI updates
+                        document.cookie = 'consent=true; path=/';
+                        if(b) b.style.display='none';
+                        // then notify server so it can create the httponly user_id and record in DB
+                        try{
+                            await fetch('/accept_cookies', { method: 'GET', credentials: 'same-origin' });
+                        }catch(e){
+                            console.warn('accept_cookies failed', e);
+                        }
+                    });
+                }
+
+                if(declineBtn){
+                    declineBtn.addEventListener('click', async function(){
+                        document.cookie = 'consent=false; path=/';
+                        if(b) b.style.display='none';
+                        try{
+                            await fetch('/decline_cookies', { method: 'GET', credentials: 'same-origin' });
+                        }catch(e){
+                            console.warn('decline_cookies failed', e);
+                        }
+                    });
+                }
+            }
+        })();
+        </script>
+        <script>
+        // Fetch current user info and display it in the nav (if present)
+        (async function(){
+            try{
+                const res = await fetch('/current_user', { credentials: 'same-origin' });
+                if(!res.ok) return;
+                const j = await res.json();
+                if(!j || !j.user) return;
+                const el = document.getElementById('current-user');
+                if(!el) return;
+                const short = j.user.short || j.user.id || '';
+                const info = j.user.info || '';
+                el.textContent = `User: ${short}${info ? ' — ' + info : ''}`;
+            }catch(e){
+                // silent fail; not critical
+                console.debug('current_user fetch failed', e);
+            }
+        })();
+        </script>
+    </main>
+    <footer>
+        <p>&copy; 2023 AI Chatbot by TOM! Devops25</p>
+    </footer>
+</body>
+</html>

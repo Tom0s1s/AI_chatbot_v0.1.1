@@ -1,0 +1,23 @@
+ollama pull llama2:13b LLM 
+
+ollama pull phi4-reasoning:14b - Brains
+
+ollama pull llava:13b - IMG handling
+pip install ollamadiffuser - IMG CREATING 
+
+pip install - piper TTS
+
+Chat & Reasoning → covered (llama2:13b, phi4-reasoning:14b)
+
+Image Understanding → covered (llava:13b)
+
+Image Creation → covered (ollamadiffuser)
+
+Speech Output → covered (Piper + voices)
+echo $env:HUGGINGFACE_HUB_TOKEN = "MY KEY HERE" 
+
+ollamadiffuser pull city96/FLUX.1-schnell-gguf:Q4_K_M - USE THIS instead of 1.schnell (its to VRAM heavy)
+
+
+AI Stuff
+----------------------------------

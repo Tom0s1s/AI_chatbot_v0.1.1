@@ -1,0 +1,44 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="panel">
+		<header style="display:flex;justify-content:space-between;align-items:center">
+			<h2>Admin — Chat logs</h2>
+			<div style="display:flex;gap:8px;align-items:center">
+				<label for="user-select" class="muted" style="margin-right:6px">User</label>
+				<select id="user-select" style="min-width:220px"></select>
+				<button id="refresh-logs" class="icon-btn">Refresh</button>
+				<button id="export-btn" class="send-btn" title="Export CSV">Export</button>
+				<button id="clear-btn" class="icon-btn" title="Clear events">Clear</button>
+			</div>
+		</header>
+
+	<section style="margin-top:18px">
+		{% if transcript %}
+			<p class="muted">Showing {{ transcript|length }} entries (most recent first)</p>
+			<ul style="list-style:none;padding:0;margin:12px 0;display:flex;flex-direction:column;gap:12px;">
+				{% for line in transcript %}
+					<li class="panel" style="background:transparent;padding:12px;border-radius:8px;">{{ line|safe }}</li>
+				{% endfor %}
+			</ul>
+		{% else %}
+			<p class="muted">No log entries found for this user.</p>
+		{% endif %}
+	</section>
+</div>
+
+<script>
+document.getElementById('refresh-logs')?.addEventListener('click', async ()=>{
+	// Re-fetch /admin and replace <main> content via the router-friendly approach
+	try{
+		const res = await fetch(location.pathname, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+		const text = await res.text();
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(text, 'text/html');
+		const newMain = doc.querySelector('main');
+		if(newMain){ document.querySelector('main').innerHTML = newMain.innerHTML; }
+	}catch(e){ console.error(e); location.reload(); }
+});
+</script>
+
+{% endblock %}

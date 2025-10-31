@@ -1,0 +1,55 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<div class="panel info-panel">
+  <section style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="flex:1;min-width:320px">
+      <h2>About me</h2>
+      <div id="about-me" contenteditable="true" class="panel" style="min-height:120px;padding:16px;background:transparent;border-radius:8px;">Write something about yourself here. This area is editable — your text is saved locally in the browser.</div>
+
+      <h3 style="margin-top:18px">Contact</h3>
+      <ul class="contact-list" style="list-style:none;padding:0;margin:8px 0;display:flex;gap:12px;align-items:center;">
+        <li>
+          <a class="contact-link" id="linkedin" href="https://se.linkedin.com/in/tommy-osmark-0880b8389" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+            <!-- LinkedIn SVG -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="2" y="2" width="20" height="20" rx="3" fill="#0A66C2" />
+              <path d="M7.5 10.5V17" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="7.5" cy="7.5" r="1" fill="#fff" />
+              <path d="M11.5 12.5C11.5 11 13 10 14.5 10C16 10 17 11 17 12.5V17" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="contact-link" id="github" href="https://github.com/Tom0s1s" target="_blank" rel="noopener" aria-label="GitHub profile">
+            <!-- GitHub SVG -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 .5C5.73.5.9 5.34.9 11.61c0 4.77 3.09 8.82 7.37 10.25.54.1.73-.24.73-.52 0-.26-.01-1-.02-1.95-3  .65-3.65-1.45-3.65-1.45-.49-1.25-1.2-1.58-1.2-1.58-.98-.67.07-.66.07-.66 1.08.08 1.65 1.12 1.65 1.12.96 1.65 2.52 1.17 3.14.9.1-.7.38-1.17.69-1.44-2.4-.27-4.93-1.2-4.93-5.33 0-1.18.42-2.15 1.11-2.91-.11-.27-.48-1.36.1-2.84 0 0 .91-.29 2.98 1.11a10.34 10.34 0 0 1 2.71-.36c.92 0 1.85.12 2.71.36 2.06-1.4 2.97-1.11 2.97-1.11.59 1.48.22 2.57.11 2.84.69.76 1.1 1.73 1.1 2.91 0 4.14-2.54 5.05-4.96 5.32.39.34.74 1.02.74 2.06 0 1.49-.01 2.69-.01 3.05 0 .28.19.62.74.51 4.28-1.44 7.36-5.49 7.36-10.25C23.1 5.34 18.27.5 12 .5z" fill="#0b1220"/>
+            </svg>
+          </a>
+        </li>
+        <li>
+          <a class="contact-link" id="email" href="mailto:tommy.osmark@yh.nackademin.se" aria-label="Send email">
+            <!-- Email SVG -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="2" y="5" width="20" height="14" rx="2" fill="#f3f4f6" stroke="#cbd5e1"/>
+              <path d="M3 7.5l8.5 6L20 7.5" stroke="#64748b" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div style="width:420px;min-width:300px">
+      <h2>Project summary</h2>
+      <textarea id="project-summary" placeholder="Write a short project summary here..." style="width:100%;height:220px;padding:12px;border-radius:8px;border:1px solid rgba(2,6,23,0.06)"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button id="save-summary" class="send-btn" type="button">Save</button>
+        <button id="clear-summary" class="icon-btn" type="button">Clear</button>
+      </div>
+    </div>
+  </section>
+  <p class="muted" style="margin-top:18px">Note: content is stored in your browser's localStorage only. It won't be sent to the server.</p>
+</div>
+
+{% endblock %}

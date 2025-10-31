@@ -1,0 +1,96 @@
+/* index_style.css
+   Soft, professional styling for the site
+   - Page is fixed (no scroll)
+   - Vertical, left-side navbar centered vertically
+   - Clean typography and subtle neutral color palette
+*/
+
+/* Reset + base */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;padding:0;overflow:hidden;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#f6f8fb;color:#0f172a}
+
+/* Layout: keep content centered and fixed */
+body{display:flex;flex-direction:column;align-items:stretch}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px}
+
+/* Navbar: fixed on the left, vertically centered */
+.main-nav{position:fixed;left:28px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.main-nav a{display:inline-block;padding:10px 14px;border-radius:10px;background:transparent;color:#0f172a;text-decoration:none;font-weight:600;letter-spacing:0.2px;transition:all .18s ease}
+.main-nav a:hover{background:linear-gradient(90deg, rgba(16,185,129,0.06), rgba(59,130,246,0.06));transform:translateX(6px);box-shadow:0 6px 18px rgba(16,24,40,0.04)}
+.main-nav a:active{transform:translateX(2px)}
+
+/* Header content placement (shifted to the right of the navbar) */
+header{min-height:120px;display:flex;flex-direction:column;justify-content:center;padding-left:140px;padding-top:40px;padding-bottom:20px}
+header h1{font-size:2.2rem;margin-bottom:6px;color:#0b1220}
+header p{margin:0;color:#475569}
+
+/* Main panel card */
+.panel{width:880px;max-width:calc(100% - 160px);background:linear-gradient(180deg,#ffffff, #fbfdff);border-radius:12px;padding:36px;box-shadow:0 10px 30px rgba(15,23,42,0.06);border:1px solid rgba(15,23,42,0.04)}
+
+/* Footer */
+footer{height:56px;display:flex;align-items:center;justify-content:center;color:#94a3b8}
+
+/* Small responsive tune */
+@media (max-width:800px){
+  .main-nav{left:12px}
+  header{padding-left:96px}
+  .panel{width:90%}
+}
+
+/* Utility */
+.muted{color:#94a3b8}
+
+/* Page transition helpers for AJAX navigation */
+.fade-in{opacity:1;transform:none;transition:opacity 220ms ease, transform 220ms ease}
+.fade-out{opacity:0;transform:translateY(6px);transition:opacity 220ms ease, transform 220ms ease}
+
+/* Initial state for main to ensure smooth first paint when injected */
+main{opacity:1}
+
+/* Contact icon styles */
+.contact-list{display:flex;gap:12px;align-items:center;padding:0;margin:0}
+.contact-link{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:transparent;border:1px solid rgba(2,6,23,0.04);transition:all .18s ease}
+.contact-link svg{width:20px;height:20px}
+.contact-link:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(2,6,23,0.06);background:#fff}
+
+/* Cookie banner styles */
+.cookie-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:1200;display:flex;align-items:center;justify-content:center;padding:0}
+.cookie-banner .cookie-inner{max-width:980px;width:calc(100% - 48px);background:linear-gradient(180deg,#ffffff,#f8fbff);border-radius:12px;padding:14px 16px;box-shadow:0 8px 30px rgba(2,6,23,0.08);border:1px solid rgba(2,6,23,0.04);display:flex;gap:12px;align-items:center}
+.cookie-banner p{margin:0;padding:0;color:#0b1220;font-size:0.98rem}
+.cookie-actions{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:10px;border:none;background:linear-gradient(90deg,#10b981,#3b82f6);color:#fff;font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(59,130,246,0.08);transition:transform .12s ease, box-shadow .12s ease}
+.btn:active{transform:translateY(1px)}
+.btn-secondary{background:transparent;color:#0b1220;border:1px solid rgba(2,6,23,0.06);box-shadow:none}
+
+@media (max-width:700px){
+  .cookie-banner .cookie-inner{flex-direction:column;align-items:stretch;padding:12px}
+  .cookie-actions{margin-left:0;justify-content:flex-end}
+  .cookie-banner p{font-size:0.95rem}
+}
+
+/* Recording button state */
+.icon-btn.recording{background:linear-gradient(90deg,#ff7b7b,#ff3b3b);border-color:rgba(255,59,59,0.12);color:white}
+.icon-btn.recording .dot{display:inline-block;width:12px;height:12px;background:#fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
+
+/* Chat-specific styles */
+.chat-panel{display:flex;flex-direction:column;height:calc(100vh - 180px);min-height:420px}
+.chat-container{display:flex;flex-direction:column;height:100%}
+.messages{flex:1;overflow:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px}
+.message{display:flex}
+.message.user{justify-content:flex-end}
+.message.assistant{justify-content:flex-start}
+.bubble{max-width:78%;padding:14px 18px;border-radius:14px;font-size:1rem;line-height:1.45;box-shadow:0 6px 18px rgba(15,23,42,0.04)}
+.bubble.user{background:linear-gradient(90deg,#dcfce7,#ecfeef);color:#052e16;border-radius:16px 16px 4px 16px}
+.bubble.assistant{background:#ffffff;color:#0b1220;border-radius:16px 16px 16px 4px}
+
+.chat-form{display:flex;align-items:center;padding:14px;border-top:1px solid rgba(15,23,42,0.04);gap:12px}
+.chat-input{flex:1;padding:12px 14px;border-radius:999px;border:1px solid rgba(2,6,23,0.06);background:transparent;font-size:1rem}
+.icon-btn{width:44px;height:44px;border-radius:10px;border:none;background:transparent;font-size:20px}
+.send-btn{width:52px;height:44px;border-radius:999px;border:none;background:linear-gradient(90deg,#10b981,#3b82f6);color:white;font-weight:700}
+
+/* Make sure internal chat area scrolls while page remains fixed */
+@media (max-width:600px){
+  .panel{padding:18px}
+  .chat-panel{height:calc(100vh - 140px)}
+  .bubble{max-width:92%}
+}
