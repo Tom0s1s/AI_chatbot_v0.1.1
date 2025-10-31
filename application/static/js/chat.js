@@ -24,6 +24,7 @@ window.initChat = function initChat() {
     wrapper.appendChild(bubble);
     messages.appendChild(wrapper);
     messages.scrollTop = messages.scrollHeight;
+    return wrapper; // Return the wrapper for later modification
   }
 
   // Remove any previously attached listener by cloning
@@ -33,7 +34,6 @@ window.initChat = function initChat() {
   // Update references to the new elements
   const newInput = newForm.querySelector('#message-input');
   const newRecordBtn = newForm.querySelector('#record-btn');
-  const newReasonMode = newForm.querySelector('#reason-mode');
 
   newForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -43,24 +43,36 @@ window.initChat = function initChat() {
     appendMessage('user', text);
     newInput.value = '';
 
+    // Add loading indicator
+    const loadingWrapper = appendMessage('loading', 'AI is thinking...');
+    const loadingBubble = loadingWrapper.querySelector('.bubble');
+
     try{
-      const formData = { message: text };
-      if (newReasonMode && newReasonMode.checked) {
-        formData.mode = 'reason';
-      }
       const res = await fetch(window.location.pathname || '/bot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(formData)
+        body: new URLSearchParams({ message: text })
       });
       if(res.ok){
         const data = await res.json();
-        appendMessage('assistant', data.reply || '(no reply)');
+        // Replace loading with response
+        loadingWrapper.className = 'message assistant';
+        loadingBubble.className = 'bubble assistant';
+        loadingBubble.innerHTML = escapeHtml(data.reply || '(no reply)');
+        messages.scrollTop = messages.scrollHeight;
       } else {
-        appendMessage('assistant', '(error from server)');
+        // Replace with error
+        loadingWrapper.className = 'message assistant';
+        loadingBubble.className = 'bubble assistant';
+        loadingBubble.innerHTML = escapeHtml('(error from server)');
+        messages.scrollTop = messages.scrollHeight;
       }
     } catch (err) {
-      appendMessage('assistant', '(network error)');
+      // Replace with network error
+      loadingWrapper.className = 'message assistant';
+      loadingBubble.className = 'bubble assistant';
+      loadingBubble.innerHTML = escapeHtml('(network error)');
+      messages.scrollTop = messages.scrollHeight;
     }
   });
 

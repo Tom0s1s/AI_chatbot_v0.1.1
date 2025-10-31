@@ -1,28 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify
 from .functions import cookie_handler, db_handler
-from .functions.AI_handler import AIHandler
 import os
 from dotenv import load_dotenv
+import ollama
 
 # Load environment variables from .env file
 load_dotenv()
-
-
-# Build AI handler config from environment so the runtime can be switched without
-# changing code. Useful variables:
-#  - OLLAMA_CHAT_MODEL: default model name
-#  - USE_OLLAMA_CLI: if '0' or 'false' will prefer HTTP
-#  - OLLAMA_HTTP_URL: URL to post {model, prompt} to as a fallback
-ai_config = {
-    "default_model": os.environ.get("OLLAMA_CHAT_MODEL"),
-    "use_ollama_cli": os.environ.get("USE_OLLAMA_CLI", "1").lower() not in ("0", "false", "no"),
-    "ollama_http_url": os.environ.get("OLLAMA_HTTP_URL"),
-    # If you want to force the app to only use the Ollama CLI (no HTTP fallback),
-    # set FORCE_OLLAMA_CLI=1 in the environment or change this value to True.
-    "force_cli_only": os.environ.get("FORCE_OLLAMA_CLI", "0").lower() in ("1", "true", "yes"),
-}
-
-ai_handler = AIHandler(config=ai_config)
 
 app = Flask(__name__)
 
@@ -64,24 +47,16 @@ def bot():
         # 1) audio file (multipart form file 'audio')
         audio_file = request.files.get('audio')
         if audio_file:
-            audio_bytes = audio_file.read()
-            try:
-                transcription = ai_handler.transcribe_audio(audio_bytes)
-                user_message = transcription
-            except Exception as e:
-                # If transcription fails, return informative error
-                return jsonify({"error": "Audio transcription failed", "detail": str(e)}), 500
+            # transcription = ai_handler.transcribe_audio(audio_bytes)
+            user_message = "(Audio transcription not implemented yet)"
 
         # 2) image file (multipart form file 'image')
         image_file = request.files.get('image')
         image_caption = None
         if image_file:
-            img_bytes = image_file.read()
-            try:
-                image_caption = ai_handler.caption_image(img_bytes)
-            except Exception as e:
-                # If captioning fails, include a warning but continue
-                image_caption = None
+            # img_bytes = image_file.read()
+            # image_caption = ai_handler.caption_image(img_bytes)
+            image_caption = "(Image captioning not implemented yet)"
 
         # 3) textual message field
         if not user_message:
@@ -94,29 +69,31 @@ def bot():
         logged_input = user_message or f"[image only] caption:{image_caption}"
         db_handler.add_event(user_id, "chat_user", logged_input)
 
-        # Build memory prompt (last 20 events only)
-        memory_prompt = db_handler.build_memory_prompt(user_id, limit=20)
+        # Build memory messages (last 20 events only)
+        events = db_handler.get_events(user_id, limit=20)
+        # Reverse so oldest is first
+        events = events[::-1]
 
-        # Build an LLM prompt by combining memory and the new user message and optional image caption.
-        prompt_parts = [memory_prompt]
+        messages = [{"role": "system", "content": "You are a helpful AI assistant. Respond naturally without mentioning your model or introducing yourself unless asked."}]
+        for event_type, content, timestamp in events:
+            if event_type == "chat_user":
+                messages.append({"role": "user", "content": content})
+            elif event_type == "chat_llm":
+                messages.append({"role": "assistant", "content": content})
+            # Ignore other event types for now
+
+        # Add the current user message
         if user_message:
-            prompt_parts.append("User: " + user_message)
+            messages.append({"role": "user", "content": user_message})
         if image_caption:
-            prompt_parts.append("[Image description]: " + image_caption)
-        prompt = "\n\n".join([p for p in prompt_parts if p]).strip()
+            messages.append({"role": "user", "content": f"[Image description]: {image_caption}"})
 
-        # Allow caller to request 'reason' mode (uses reasoning model) via form flag 'mode=reason'
-        mode = request.form.get('mode') or (request.args.get('mode') if request.method == 'GET' else None)
-        model = request.form.get('model') or None
+        model = request.form.get('model') or os.environ.get("OLLAMA_CHAT_MODEL", "llama2:13b")
 
-        # Ask configured AI handler for a reply. Fall back to an echo on error.
+        # Ask the LLM for a reply. Fall back to an echo on error.
         try:
-            if mode == 'reason':
-                llm_result = ai_handler.reason(prompt, model=model) if model else ai_handler.reason(prompt)
-            else:
-                llm_result = ai_handler.chat(prompt, model=model) if model else ai_handler.chat(prompt)
-
-            assistant_reply = llm_result.get("text") if isinstance(llm_result, dict) else str(llm_result)
+            response = ollama.chat(model=model, messages=messages)
+            assistant_reply = response["message"]["content"]
         except Exception as e:
             # Log and fall back
             import logging
@@ -127,8 +104,7 @@ def bot():
         db_handler.add_event(user_id, "chat_llm", assistant_reply)
 
         return jsonify({
-            "reply": assistant_reply,
-            "memory_prompt": memory_prompt
+            "reply": assistant_reply
         })
 
     return render_template('bot.html')
@@ -207,7 +183,8 @@ def info():
 def ai_status():
     """Return a JSON status of available AI drivers."""
     try:
-        status = ai_handler.status()
+        model = os.environ.get("OLLAMA_CHAT_MODEL", "llama2:13b")
+        status = {"default_model": model}
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
     return jsonify({"ok": True, "status": status})
