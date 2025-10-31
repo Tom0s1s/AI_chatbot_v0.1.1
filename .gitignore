@@ -144,6 +144,10 @@ application/database.db
 *.sqlite
 *.sqlite3
 
+# Large model files (download separately)
+*.onnx
+*.onnx.json
+
 # Logs
 *.log
 
