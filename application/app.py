@@ -1,15 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify, send_file
+from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify, send_file, send_from_directory
 from .functions import cookie_handler, db_handler
+from .functions.AI_handler import AIHandler 
 import os
 from dotenv import load_dotenv
-import ollama
 import io
 from piper.voice import PiperVoice
-import whisper
-import warnings
-
-# Suppress Whisper FP16 warning
-warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,6 +13,9 @@ app = Flask(__name__)
 
 # Initialize DB on startup
 db_handler.init_db()
+
+# Initialize AI handler
+ai_handler_instance = AIHandler()
 
 @app.route('/')
 def index():
@@ -49,88 +47,10 @@ def bot():
         user_id = request.cookies.get("user_id")
         if not user_id:
             return redirect(url_for("index"))
-        # Determine input: prefer uploaded audio, then image, then text form
-        user_message = None
-        # 1) audio file (multipart form file 'audio')
-        audio_file = request.files.get('audio')
-        if audio_file:
-            # Save the wav file temporarily
-            import tempfile
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                audio_file.save(temp_file)
-                audio_path = temp_file.name
-            print(f"Audio file saved to {audio_path}")
-            # Transcribe using Whisper
-            try:
-                model = whisper.load_model("tiny")
-                result = model.transcribe(audio_path)
-                user_message = result["text"].strip()
-                print(f"Transcription: '{user_message}'")
-            except Exception as e:
-                print(f"Transcription failed: {e}")
-                user_message = "Sorry, I couldn't understand the audio. Please try again or type your message."
-            finally:
-                # Clean up temp file
-                if os.path.exists(audio_path):
-                    os.unlink(audio_path)
-
-        # 2) image file (multipart form file 'image')
-        image_file = request.files.get('image')
-        image_caption = None
-        if image_file:
-            # img_bytes = image_file.read()
-            # image_caption = ai_handler.caption_image(img_bytes)
-            image_caption = "(Image captioning not implemented yet)"
-
-        # 3) textual message field
-        if not user_message:
-            user_message = request.form.get("message")
-
-        if not user_message and not image_caption:
-            return jsonify({"error": "No input provided"}), 400
-
-        # Log the original user input (if available)
-        logged_input = user_message or f"[image only] caption:{image_caption}"
-        db_handler.add_event(user_id, "chat_user", logged_input)
-
-        # Build memory messages (last 20 events only)
-        events = db_handler.get_events(user_id, limit=20)
-        # Reverse so oldest is first
-        events = events[::-1]
-        
-        # Construct messages for LLM
-        messages = [{"role": "system", "content": "You are a helpful AI assistant. Respond naturally without mentioning your model or introducing yourself unless asked."}]
-        for event_type, content, timestamp in events:
-            if event_type == "chat_user":
-                messages.append({"role": "user", "content": content})
-            elif event_type == "chat_llm":
-                messages.append({"role": "assistant", "content": content})
-            # Ignore other event types for now
-
-        # Add the current user message
-        if user_message:
-            messages.append({"role": "user", "content": user_message})
-        if image_caption:
-            messages.append({"role": "user", "content": f"[Image description]: {image_caption}"})
-
-        model = request.form.get('model') or os.environ.get("OLLAMA_CHAT_MODEL", "llama2:13b")
-
-        # Ask the LLM for a reply. Fall back to an echo on error.
-        try:
-            response = ollama.chat(model=model, messages=messages)
-            assistant_reply = response["message"]["content"]
-        except Exception as e:
-            # Log and fall back
-            import logging
-            logging.exception("LLM chat failed: %s", e)
-            assistant_reply = f"(Fallback) You said: {user_message or '[image]'}"
-
-        # Log assistant reply
-        db_handler.add_event(user_id, "chat_llm", assistant_reply)
-
-        return jsonify({
-            "reply": assistant_reply
-        })
+        result = ai_handler_instance.handle_bot_request(request, user_id)
+        if "error" in result:
+            return jsonify(result), 400
+        return jsonify(result)
 
     return render_template('bot.html')
 
@@ -226,24 +146,34 @@ def ai_status():
     return jsonify({"ok": True, "status": status})
 
 
+@app.route('/img/<path:filename>')
+def img_file(filename):
+    return send_from_directory('img', filename)
+
+
 @app.route('/tts', methods=['POST'])
 def tts():
     text = request.form.get('text', '')
+    # Clean the text
+    import re
+    text = re.sub(r'[^\w\s.,!?-]', '', text)  # Remove special chars except basic punctuation
+    print(f"TTS text: '{text}'")
     if not text:
         return jsonify({"error": "No text provided"}), 400
 
-    model_path = os.path.join(os.getcwd(), 'application', 'sound', 'en_GB-southern_english_female-low.onnx')
+    model_path = os.path.join(os.path.dirname(__file__), 'sound', 'en_GB-southern_english_female-low.onnx')
     if not os.path.exists(model_path):
         return jsonify({"error": "TTS model not found"}), 500
 
     try:
+        from piper.voice import PiperVoice
         voice = PiperVoice.load(model_path)
         wav_data = io.BytesIO()
         voice.synthesize(text, wav_data)
         wav_data.seek(0)
-        return send_file(wav_data, mimetype='audio/wav', as_attachment=True, download_name='tts.wav')
+        return send_file(wav_data, mimetype='audio/wav', download_name='tts.wav')
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"TTS error: {str(e)}"}), 500
 
 
 @app.errorhandler(404)

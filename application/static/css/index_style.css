@@ -25,7 +25,7 @@ header h1{font-size:2.2rem;margin-bottom:6px;color:#0b1220}
 header p{margin:0;color:#475569}
 
 /* Main panel card */
-.panel{width:880px;max-width:calc(100% - 160px);background:linear-gradient(180deg,#ffffff, #fbfdff);border-radius:12px;padding:36px;box-shadow:0 10px 30px rgba(15,23,42,0.06);border:1px solid rgba(15,23,42,0.04)}
+.panel{width:880px;max-width:calc(100% - 160px);background:linear-gradient(180deg,#ffffff, #fbfdff);border-radius:12px;padding:36px;box-shadow:0 10px 30px rgba(15,23,42,0.06);border:1px solid rgba(15,23,42,0.04);height:100%;overflow:hidden}
 
 /* Footer */
 footer{height:56px;display:flex;align-items:center;justify-content:center;color:#94a3b8}
@@ -143,6 +143,8 @@ main{opacity:1}
 
 .table-container {
 	overflow-x: auto;
+	overflow-y: auto;
+	max-height: 600px;
 	border-radius: 8px;
 	border: 1px solid rgba(15,23,42,0.1);
 	background: #fff;
@@ -231,8 +233,14 @@ main{opacity:1}
 .icon-btn.recording{background:linear-gradient(90deg,#ff7b7b,#ff3b3b);border-color:rgba(255,59,59,0.12);color:white}
 .icon-btn.recording .dot{display:inline-block;width:12px;height:12px;background:#fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.12)}
 
-/* Chat-specific styles */
-.chat-panel{display:flex;flex-direction:column;height:calc(100vh - 180px);min-height:420px}
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 12px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
 .chat-container{display:flex;flex-direction:column;height:100%}
 .messages{flex:1;overflow:auto;padding:24px 28px;display:flex;flex-direction:column;gap:18px}
 .message{display:flex;animation:fadeIn 0.5s ease-in}

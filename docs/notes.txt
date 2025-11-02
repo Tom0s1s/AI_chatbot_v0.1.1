@@ -4,7 +4,7 @@ ollama pull phi4-reasoning:14b - Brains
 
 ollama pull llava:13b - IMG handling
 pip install ollamadiffuser - IMG CREATING 
-
+ OLLAMA_HOST                IP Address for the ollama server (default 127.0.0.1:11434)
 pip install - piper TTS
 
 Chat & Reasoning → covered (llama2:13b, phi4-reasoning:14b)
