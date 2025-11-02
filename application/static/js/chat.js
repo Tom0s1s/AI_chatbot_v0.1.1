@@ -22,6 +22,29 @@ window.initChat = function initChat() {
     bubble.className = 'bubble ' + kind;
     bubble.innerHTML = escapeHtml(text);
     wrapper.appendChild(bubble);
+
+    // Add speak button for assistant messages
+    if(kind === 'assistant'){
+      const speakBtn = document.createElement('button');
+      speakBtn.className = 'speak-btn';
+      speakBtn.textContent = '🔊';
+      speakBtn.title = 'Speak this message';
+      speakBtn.addEventListener('click', () => {
+        const formData = new FormData();
+        formData.append('text', text);
+        fetch('/tts', {
+          method: 'POST',
+          body: formData
+        }).then(res => res.blob()).then(blob => {
+          const audioUrl = URL.createObjectURL(blob);
+          const audio = new Audio(audioUrl);
+          audio.play();
+          audio.onended = () => URL.revokeObjectURL(audioUrl);
+        }).catch(err => console.warn('TTS failed:', err));
+      });
+      wrapper.appendChild(speakBtn);
+    }
+
     messages.appendChild(wrapper);
     messages.scrollTop = messages.scrollHeight;
     return wrapper; // Return the wrapper for later modification
@@ -43,7 +66,7 @@ window.initChat = function initChat() {
     appendMessage('user', text);
     newInput.value = '';
 
-    // Add loading indicator
+    //loading indicator
     const loadingWrapper = appendMessage('loading', 'AI is thinking...');
     const loadingBubble = loadingWrapper.querySelector('.bubble');
 
@@ -59,6 +82,18 @@ window.initChat = function initChat() {
         loadingWrapper.className = 'message assistant';
         loadingBubble.className = 'bubble assistant';
         loadingBubble.innerHTML = escapeHtml(data.reply || '(no reply)');
+        // Auto-play TTS for assistant response
+        const formData = new FormData();
+        formData.append('text', data.reply);
+        fetch('/tts', {
+          method: 'POST',
+          body: formData
+        }).then(res => res.blob()).then(blob => {
+          const audioUrl = URL.createObjectURL(blob);
+          const audio = new Audio(audioUrl);
+          audio.play();
+          audio.onended = () => URL.revokeObjectURL(audioUrl);
+        }).catch(err => console.warn('TTS failed:', err));
         messages.scrollTop = messages.scrollHeight;
       } else {
         // Replace with error
@@ -79,34 +114,58 @@ window.initChat = function initChat() {
   // focus input
   newInput.focus();
 
-  // --- Recording support (MediaRecorder) ---
+  // --- Recording support (WAV using Web Audio API) ---
   const recordBtn = newRecordBtn;
-  let mediaStream = null;
-  let recorder = null;
-  let chunks = [];
+  let audioContext = null;
+  let source = null;
+  let processor = null;
+  let samples = [];
   let isRecording = false;
+
+  function encodeWAV(samples, sampleRate) {
+    const buffer = new ArrayBuffer(44 + samples.length * 2);
+    const view = new DataView(buffer);
+    const writeString = (offset, string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + samples.length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, 1, true); // mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, samples.length * 2, true);
+    for (let i = 0; i < samples.length; i++) {
+      view.setInt16(44 + i * 2, samples[i] * 0x7FFF, true);
+    }
+    return buffer;
+  }
 
   async function startRecording(){
     try{
-      mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
-      recorder = new MediaRecorder(mediaStream);
-      chunks = [];
-      recorder.ondataavailable = (ev) => { if(ev.data && ev.data.size) chunks.push(ev.data); };
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, {type: 'audio/webm'});
-        // make available for later sending to your TTS LLM
-        window.lastRecordedAudio = blob;
-        appendMessage('user', '[Voice message recorded]');
-        // stop all tracks
-        mediaStream.getTracks().forEach(t => t.stop());
-        mediaStream = null; recorder = null; chunks = []; isRecording = false;
-        recordBtn.classList.remove('recording');
-        recordBtn.innerHTML = `<!-- mic icon -->\n          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">\n            <path d=\"M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z\" stroke=\"#0b1220\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n            <path d=\"M19 11v1a7 7 0 0 1-14 0v-1\" stroke=\"#0b1220\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n            <path d=\"M12 21v-3\" stroke=\"#0b1220\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          </svg>`;
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+      audioContext = new AudioContext();
+      source = audioContext.createMediaStreamSource(stream);
+      processor = audioContext.createScriptProcessor(4096, 1, 1);
+      samples = [];
+      processor.onaudioprocess = (e) => {
+        const inputBuffer = e.inputBuffer.getChannelData(0);
+        for (let i = 0; i < inputBuffer.length; i++) {
+          samples.push(inputBuffer[i]);
+        }
       };
-      recorder.start();
+      source.connect(processor);
+      processor.connect(audioContext.destination);
       isRecording = true;
       recordBtn.classList.add('recording');
-      // show a visual indicator while recording
       recordBtn.innerHTML = '<span class="dot"></span>';
     } catch(err){
       console.warn('Microphone access denied or not available', err);
@@ -115,8 +174,39 @@ window.initChat = function initChat() {
   }
 
   function stopRecording(){
-    if(recorder && recorder.state !== 'inactive') recorder.stop();
-    // recorder.onstop will handle cleanup
+    if (source) source.disconnect();
+    if (processor) processor.disconnect();
+    if (audioContext) audioContext.close();
+    const wavBuffer = encodeWAV(samples, audioContext.sampleRate);
+    const blob = new Blob([wavBuffer], {type: 'audio/wav'});
+    // Send audio to server
+    const formData = new FormData();
+    formData.append('audio', blob, 'recording.wav');
+
+    // Add loading for audio processing
+    const loadingWrapper = appendMessage('loading', 'Processing audio...');
+    const loadingBubble = loadingWrapper.querySelector('.bubble');
+
+    fetch(window.location.pathname || '/bot', {
+      method: 'POST',
+      body: formData
+    }).then(res => res.json()).then(data => {
+      // Replace with transcription or response
+      loadingWrapper.className = 'message assistant';
+      loadingBubble.className = 'bubble assistant';
+      loadingBubble.innerHTML = escapeHtml(data.reply || '(no reply)');
+      messages.scrollTop = messages.scrollHeight;
+    }).catch(err => {
+      loadingWrapper.className = 'message assistant';
+      loadingBubble.className = 'bubble assistant';
+      loadingBubble.innerHTML = escapeHtml('(audio processing error)');
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    // Reset
+    audioContext = null; source = null; processor = null; samples = []; isRecording = false;
+    recordBtn.classList.remove('recording');
+    recordBtn.innerHTML = `<!-- mic icon -->\n          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">\n            <path d=\"M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z\" stroke=\"#0b1220\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n            <path d=\"M19 11v1a7 7 0 0 1-14 0v-1\" stroke=\"#0b1220\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n            <path d=\"M12 21v-3\" stroke=\"#0b1220\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n          </svg>`;
   }
 
   if(recordBtn){

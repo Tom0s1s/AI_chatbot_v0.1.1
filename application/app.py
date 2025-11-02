@@ -1,8 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify
+from flask import Flask, render_template, request, redirect, url_for, make_response, jsonify, send_file
 from .functions import cookie_handler, db_handler
 import os
 from dotenv import load_dotenv
 import ollama
+import io
+from piper.voice import PiperVoice
+import whisper
+import warnings
+
+# Suppress Whisper FP16 warning
+warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
 
 # Load environment variables from .env file
 load_dotenv()
@@ -47,8 +54,25 @@ def bot():
         # 1) audio file (multipart form file 'audio')
         audio_file = request.files.get('audio')
         if audio_file:
-            # transcription = ai_handler.transcribe_audio(audio_bytes)
-            user_message = "(Audio transcription not implemented yet)"
+            # Save the wav file temporarily
+            import tempfile
+            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
+                audio_file.save(temp_file)
+                audio_path = temp_file.name
+            print(f"Audio file saved to {audio_path}")
+            # Transcribe using Whisper
+            try:
+                model = whisper.load_model("tiny")
+                result = model.transcribe(audio_path)
+                user_message = result["text"].strip()
+                print(f"Transcription: '{user_message}'")
+            except Exception as e:
+                print(f"Transcription failed: {e}")
+                user_message = "Sorry, I couldn't understand the audio. Please try again or type your message."
+            finally:
+                # Clean up temp file
+                if os.path.exists(audio_path):
+                    os.unlink(audio_path)
 
         # 2) image file (multipart form file 'image')
         image_file = request.files.get('image')
@@ -73,7 +97,8 @@ def bot():
         events = db_handler.get_events(user_id, limit=20)
         # Reverse so oldest is first
         events = events[::-1]
-
+        
+        # Construct messages for LLM
         messages = [{"role": "system", "content": "You are a helpful AI assistant. Respond naturally without mentioning your model or introducing yourself unless asked."}]
         for event_type, content, timestamp in events:
             if event_type == "chat_user":
@@ -179,6 +204,17 @@ def info():
     return render_template('info.html')
 
 
+@app.route('/current_user')
+def current_user():
+    """Return current user info as JSON."""
+    user_id = request.cookies.get('user_id')
+    if not user_id:
+        return jsonify({}), 200
+    user_info = db_handler.get_user(user_id)
+    short_id = user_id[:5] if len(user_id) > 5 else user_id
+    return jsonify({"user": {"id": user_id, "short": short_id, "info": user_info or ""}})
+
+
 @app.route('/ai/status')
 def ai_status():
     """Return a JSON status of available AI drivers."""
@@ -190,24 +226,30 @@ def ai_status():
     return jsonify({"ok": True, "status": status})
 
 
-@app.route('/current_user')
-def current_user():
-    """Return a small JSON object describing the current user (based on cookie).
-    Used by the frontend to display who is currently using the chat.
-    """
-    user_id = request.cookies.get('user_id')
-    if not user_id:
-        return jsonify({"user": None})
+@app.route('/tts', methods=['POST'])
+def tts():
+    text = request.form.get('text', '')
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
 
-    # Pull any stored info from the DB (may be empty string)
+    model_path = os.path.join(os.getcwd(), 'application', 'sound', 'en_GB-southern_english_female-low.onnx')
+    if not os.path.exists(model_path):
+        return jsonify({"error": "TTS model not found"}), 500
+
     try:
-        info = db_handler.get_user(user_id) or ""
-    except Exception:
-        info = ""
+        voice = PiperVoice.load(model_path)
+        wav_data = io.BytesIO()
+        voice.synthesize(text, wav_data)
+        wav_data.seek(0)
+        return send_file(wav_data, mimetype='audio/wav', as_attachment=True, download_name='tts.wav')
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    # Provide a short display id so we don't have to render a long UUID everywhere
-    short = user_id.split('-')[0] if isinstance(user_id, str) else None
-    return jsonify({"user": {"id": user_id, "short": short, "info": info}})
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
 
 if __name__ == '__main__':
     app.run(debug=True)

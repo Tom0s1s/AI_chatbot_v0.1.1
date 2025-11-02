@@ -13,10 +13,15 @@ window.initAdmin = function initAdmin(){
       const data = await res.json();
       if(!userSelect) return;
       userSelect.innerHTML = '';
+      // Add default option
+      const defaultOpt = document.createElement('option');
+      defaultOpt.value = '';
+      defaultOpt.textContent = 'Select User';
+      userSelect.appendChild(defaultOpt);
       data.forEach(u => {
         const opt = document.createElement('option');
         opt.value = u.id;
-        opt.textContent = u.id + (u.info ? (' — ' + u.info) : '');
+        opt.textContent = u.id.substring(0,5) + (u.info ? (' — ' + u.info) : '');
         userSelect.appendChild(opt);
       });
       // if there's a query param user_id, try to select it

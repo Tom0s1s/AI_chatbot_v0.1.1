@@ -2,25 +2,40 @@
 
 {% block content %}
 <div class="panel">
-		<header style="display:flex;justify-content:space-between;align-items:center">
+		<header class="admin-header">
 			<h2>Admin — Chat logs</h2>
-			<div style="display:flex;gap:8px;align-items:center">
-				<label for="user-select" class="muted" style="margin-right:6px">User</label>
-				<select id="user-select" style="min-width:220px"></select>
-				<button id="refresh-logs" class="icon-btn">Refresh</button>
-				<button id="export-btn" class="send-btn" title="Export CSV">Export</button>
-				<button id="clear-btn" class="icon-btn" title="Clear events">Clear</button>
+			<div class="admin-controls">
+				<label for="user-select" class="muted">User:</label>
+				<select id="user-select" class="admin-select"></select>
+				<button id="refresh-logs" class="admin-btn admin-btn-secondary" title="Refresh logs">🔄 Refresh</button>
+				<button id="export-btn" class="admin-btn admin-btn-primary" title="Export CSV">📥 Export</button>
+				<button id="clear-btn" class="admin-btn admin-btn-danger" title="Clear events">🗑️ Clear</button>
 			</div>
 		</header>
 
-	<section style="margin-top:18px">
+	<section class="admin-logs-section">
 		{% if transcript %}
 			<p class="muted">Showing {{ transcript|length }} entries (most recent first)</p>
-			<ul style="list-style:none;padding:0;margin:12px 0;display:flex;flex-direction:column;gap:12px;">
-				{% for line in transcript %}
-					<li class="panel" style="background:transparent;padding:12px;border-radius:8px;">{{ line|safe }}</li>
-				{% endfor %}
-			</ul>
+			<div class="table-container">
+				<table class="admin-table">
+					<thead>
+						<tr>
+							<th>Type</th>
+							<th>Content</th>
+							<th>Timestamp</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for line in transcript %}
+							<tr>
+								<td>{{ line.split('</b>')[0].replace('<b>', '').replace(':', '') }}</td>
+								<td>{{ line.split('</b>')[1].split('<small>')[0].strip() }}</td>
+								<td>{{ line.split('<small>(')[1].replace(')</small>', '') }}</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
 		{% else %}
 			<p class="muted">No log entries found for this user.</p>
 		{% endif %}

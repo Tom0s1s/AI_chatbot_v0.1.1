@@ -47,11 +47,170 @@ footer{height:56px;display:flex;align-items:center;justify-content:center;color:
 /* Initial state for main to ensure smooth first paint when injected */
 main{opacity:1}
 
-/* Contact icon styles */
-.contact-list{display:flex;gap:12px;align-items:center;padding:0;margin:0}
-.contact-link{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:transparent;border:1px solid rgba(2,6,23,0.04);transition:all .18s ease}
-.contact-link svg{width:20px;height:20px}
-.contact-link:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(2,6,23,0.06);background:#fff}
+/* Admin panel styles */
+.admin-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 20px;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+
+.admin-header h2 {
+	flex: 1;
+	min-width: 200px;
+	margin: 0;
+}
+
+.admin-controls {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	flex-wrap: wrap;
+	flex-shrink: 0;
+}
+
+.admin-select {
+	min-width: 220px;
+	padding: 8px 12px;
+	border: 1px solid rgba(2,6,23,0.1);
+	border-radius: 8px;
+	background: #fff;
+	font-size: 0.95rem;
+	color: #0b1220;
+	cursor: pointer;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-select:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+.admin-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 14px;
+	border: none;
+	border-radius: 8px;
+	font-size: 0.9rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	text-decoration: none;
+}
+
+.admin-btn-primary {
+	background: linear-gradient(90deg, #10b981, #3b82f6);
+	color: #fff;
+	box-shadow: 0 2px 8px rgba(59,130,246,0.2);
+}
+
+.admin-btn-primary:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+}
+
+.admin-btn-secondary {
+	background: #f8fafc;
+	color: #475569;
+	border: 1px solid rgba(2,6,23,0.1);
+}
+
+.admin-btn-secondary:hover {
+	background: #e2e8f0;
+	border-color: rgba(2,6,23,0.2);
+}
+
+.admin-btn-danger {
+	background: #fef2f2;
+	color: #dc2626;
+	border: 1px solid rgba(220,38,38,0.2);
+}
+
+.admin-btn-danger:hover {
+	background: #fee2e2;
+	border-color: rgba(220,38,38,0.3);
+}
+
+/* Admin table styles */
+.admin-logs-section {
+	margin-top: 18px;
+}
+
+.table-container {
+	overflow-x: auto;
+	border-radius: 8px;
+	border: 1px solid rgba(15,23,42,0.1);
+	background: #fff;
+}
+
+.admin-table {
+	width: 100%;
+	min-width: 600px; /* Ensure minimum width for readability */
+	border-collapse: collapse;
+	font-size: 0.95rem;
+}
+
+.admin-table th, .admin-table td {
+	padding: 12px;
+	text-align: left;
+	border-bottom: 1px solid rgba(15,23,42,0.1);
+}
+
+.admin-table th {
+	background: rgba(15,23,42,0.05);
+	font-weight: 600;
+	color: #0b1220;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.admin-table tr:nth-child(even) {
+	background: rgba(15,23,42,0.02);
+}
+
+.admin-table tr:hover {
+	background: rgba(15,23,42,0.04);
+}
+
+.admin-table td:nth-child(1) {
+	width: 100px;
+	font-weight: 600;
+}
+
+.admin-table td:nth-child(2) {
+	min-width: 300px;
+	word-wrap: break-word;
+	white-space: pre-wrap; /* Preserve line breaks in content */
+}
+
+.admin-table td:nth-child(3) {
+	width: 150px;
+	color: #64748b;
+	font-size: 0.9rem;
+	white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.admin-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.admin-controls {
+		justify-content: flex-start;
+		flex-wrap: wrap;
+	}
+	.admin-select {
+		min-width: 180px;
+		flex: 1;
+	}
+}
 
 /* Cookie banner styles */
 .cookie-banner{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;z-index:1200;display:flex;align-items:center;justify-content:center;padding:0}
@@ -89,6 +248,7 @@ main{opacity:1}
 .chat-input{flex:1;padding:12px 14px;border-radius:999px;border:1px solid rgba(2,6,23,0.06);background:transparent;font-size:1rem}
 .icon-btn{width:44px;height:44px;border-radius:10px;border:none;background:transparent;font-size:20px}
 .send-btn{width:52px;height:44px;border-radius:999px;border:none;background:linear-gradient(90deg,#10b981,#3b82f6);color:white;font-weight:700}
+.speak-btn{margin-left:8px;padding:4px 8px;border:none;background:#10b981;color:white;border-radius:4px;font-size:0.8rem;cursor:pointer}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
