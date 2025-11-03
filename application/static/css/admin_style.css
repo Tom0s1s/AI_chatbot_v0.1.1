@@ -1,0 +1,190 @@
+/* admin_style.css - styles specific to the admin panel */
+
+/* Admin panel header and controls */
+.admin-header {
+	display: flex;
+	flex-direction: column; /* stack the top row and actions row */
+	gap: 10px;
+	margin-bottom: 20px;
+}
+
+.admin-top {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+}
+
+.admin-user {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.admin-header h2 {
+	flex: 1;
+	min-width: 200px;
+	margin: 0;
+}
+
+.admin-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.admin-select {
+	/* allow the select to shrink on small widths while keeping a good hit area */
+	flex: 0 1 220px;
+	min-width: 140px;
+	max-width: 40%;
+	padding: 6px 10px;
+	border: 1px solid rgba(2,6,23,0.1);
+	border-radius: 8px;
+	background: #fff;
+	font-size: 0.92rem;
+	color: #0b1220;
+	cursor: pointer;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-select:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+.admin-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px; /* slightly smaller to fit more buttons */
+	height: 36px; /* consistent height for all buttons */
+	line-height: 1;
+	border: none;
+	border-radius: 8px;
+	font-size: 0.88rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.12s ease;
+	text-decoration: none;
+	white-space: nowrap; /* keep emoji+label on one line */
+}
+
+.admin-btn-primary {
+	background: linear-gradient(90deg, #10b981, #3b82f6);
+	color: #fff;
+	box-shadow: 0 2px 8px rgba(59,130,246,0.2);
+}
+
+.admin-btn-primary:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+}
+
+.admin-btn-secondary {
+	background: #f8fafc;
+	color: #475569;
+	border: 1px solid rgba(2,6,23,0.1);
+}
+
+.admin-btn-secondary:hover {
+	background: #e2e8f0;
+	border-color: rgba(2,6,23,0.2);
+}
+
+.admin-btn-danger {
+	background: #fef2f2;
+	color: #dc2626;
+	border: 1px solid rgba(220,38,38,0.2);
+}
+
+.admin-btn-danger:hover {
+	background: #fee2e2;
+	border-color: rgba(220,38,38,0.3);
+}
+
+/* Admin table styles */
+.admin-logs-section {
+	margin-top: 18px;
+}
+
+.table-container {
+	overflow-x: auto;
+	overflow-y: auto;
+	max-height: 600px;
+	border-radius: 8px;
+	border: 1px solid rgba(15,23,42,0.1);
+	background: #fff;
+}
+
+.admin-table {
+	width: 100%;
+	min-width: 600px; /* Ensure minimum width for readability */
+	border-collapse: collapse;
+	font-size: 0.95rem;
+}
+
+.admin-table th, .admin-table td {
+	padding: 12px;
+	text-align: left;
+	border-bottom: 1px solid rgba(15,23,42,0.1);
+}
+
+.admin-table th {
+	background: rgba(15,23,42,0.05);
+	font-weight: 600;
+	color: #0b1220;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.admin-table tr:nth-child(even) {
+	background: rgba(15,23,42,0.02);
+}
+
+.admin-table tr:hover {
+	background: rgba(15,23,42,0.04);
+}
+
+.admin-table td:nth-child(1) {
+	width: 100px;
+	font-weight: 600;
+}
+
+.admin-table td:nth-child(2) {
+	min-width: 300px;
+	word-wrap: break-word;
+	white-space: pre-wrap; /* Preserve line breaks in content */
+}
+
+.admin-table td:nth-child(3) {
+	width: 150px;
+	color: #64748b;
+	font-size: 0.9rem;
+	white-space: nowrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.admin-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.admin-controls {
+		justify-content: flex-start;
+		flex-wrap: wrap;
+	}
+	.admin-select {
+		min-width: 140px;
+		flex: 1 1 auto;
+	}
+
+	.admin-btn {
+		padding: 6px 8px;
+		font-size: 0.85rem;
+	}
+}

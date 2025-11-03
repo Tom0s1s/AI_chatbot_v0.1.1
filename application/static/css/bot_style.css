@@ -1,0 +1,160 @@
+/* bot_style.css - chat page specific tweaks and polish */
+:root{
+  --bg:#f7f8fb;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --text:#0b1220;
+  --accent:#3b82f6;
+  --accent-2:#10b981;
+  --radius:12px;
+}
+
+/* Chat panel: fixed-size, centered card to match site panels.
+   Messages inside scroll; panel itself stays centered and fixed. */
+.chat-panel{
+  width:880px;
+  max-width:calc(100% - 160px);
+  height:640px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden; /* internal areas (messages) scroll */
+  margin: 40px auto; /* center horizontally and provide some top spacing */
+  background:linear-gradient(180deg,var(--card), #fbfdff);
+  border-radius: var(--radius,12px);
+  box-shadow:0 10px 30px rgba(15,23,42,0.06);
+}
+
+/* Chat header (prefix) - fixed height at top of panel */
+.chat-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  border-bottom:1px solid rgba(15,23,42,0.04);
+  background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));
+  flex:0 0 var(--chat-prefix-height,64px); /* fixed prefix height (configurable) */
+  min-height:var(--chat-prefix-height,64px);
+  box-shadow: inset 0 -1px 0 rgba(15,23,42,0.02);
+}
+
+.chat-header .chat-header-text h3{margin:0;font-size:1.05rem;color:var(--text);font-family:Georgia,serif}
+.chat-header .chat-header-text small{display:block;color:var(--muted);margin-top:2px}
+
+.chat-container{display:flex;flex-direction:column;height:100%}
+
+/* messages area must be able to shrink/grow inside flex parent */
+.messages{flex:1 1 auto;min-height:0;overflow:auto;padding:18px 20px;display:flex;flex-direction:column;gap:18px}
+
+/* nicer scrollbars (WebKit) */
+.messages::-webkit-scrollbar{width:10px}
+.messages::-webkit-scrollbar-track{background:transparent}
+.messages::-webkit-scrollbar-thumb{background:linear-gradient(180deg, rgba(59,130,246,0.18), rgba(16,185,129,0.12));border-radius:10px}
+
+/* keep chat form visible and elevated */
+.chat-form{flex-shrink:0;display:flex;align-items:center;padding:12px;border-top:1px solid rgba(15,23,42,0.04);gap:12px;background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));backdrop-filter: blur(6px)}
+
+.chat-input{flex:1;padding:12px 14px;border-radius:999px;border:1px solid rgba(2,6,23,0.06);background:transparent;font-size:1rem;transition:box-shadow .12s ease}
+.chat-input:focus{outline:none;box-shadow:0 8px 24px rgba(59,130,246,0.08)}
+
+/* slightly larger send button */
+.send-btn{width:56px;height:44px;border-radius:999px;border:none;background:linear-gradient(90deg,var(--accent-2),var(--accent));color:white;font-weight:800;box-shadow:0 10px 28px rgba(59,130,246,0.08)}
+.send-btn:active{transform:translateY(1px)}
+
+/* message bubbles - small polish */
+.bubble{max-width:78%;padding:14px 18px;border-radius:14px;font-size:1rem;line-height:1.45;box-shadow:0 10px 26px rgba(15,23,42,0.06);overflow-wrap:break-word;word-break:break-word}
+.bubble.user{background:linear-gradient(90deg,#dcfce7,#ecfeef);color:#052e16;border-radius:16px 16px 4px 16px}
+.bubble.assistant{background:var(--card);color:var(--text);border-radius:16px 16px 16px 4px}
+
+
+:root{
+  /* allow a configurable top prefix area above messages (default 0 for "as it was") */
+  --chat-prefix-height: 0px;
+}
+
+/* Make the chat panel fixed and centered on larger screens so it appears as
+   a centered card. On small screens we fall back to a normal, flowing card. */
+.chat-panel{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  z-index:20;
+  width:880px;
+  max-width:calc(100% - 160px);
+  height:640px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden; /* internal areas (messages) scroll */
+  background:linear-gradient(180deg,var(--card), #fbfdff);
+  border-radius: var(--radius,12px);
+  box-shadow:0 10px 30px rgba(15,23,42,0.06);
+}
+
+/* Responsive: on smaller screens, let the panel flow in the document and
+   use nearly full width/height so nothing is clipped by fixed positioning. */
+@media (max-width:980px){
+  .chat-panel{
+    position:static;
+    transform:none;
+    left:auto; top:auto;
+    width:calc(100% - 40px);
+    max-width:100%;
+    height:calc(100vh - 120px);
+    margin:20px auto;
+  }
+}
+:root{
+  /* allow a configurable top prefix area above messages (default 0 for "as it was") */
+  --chat-prefix-height: 0px;
+}
+
+.chat-container{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  overflow: hidden;
+}
+
+/* Messages area is the only scrollable region inside the panel. We keep
+   a top padding equal to --chat-prefix-height so consumers can optionally
+   place an absolutely-positioned prefix if needed later. */
+.messages{
+  flex:1 1 auto;
+  min-height:0; /* important for flex children to allow internal scrolling */
+  overflow:auto;
+  padding:18px 22px;
+  padding-top: var(--chat-prefix-height, 0px);
+}
+
+/* Keep the chat input/form sticky to the bottom of the panel so it is always
+   visible and only messages scroll. */
+.chat-form{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:16px 18px;
+  border-top:1px solid rgba(0,0,0,0.04);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.99));
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+}
+
+.chat-input{
+  flex:1 1 auto;
+  padding:12px 16px;
+  border-radius:28px;
+  border:1px solid rgba(0,0,0,0.06);
+}
+
+/* small UI details */
+.send-btn{
+  width:44px; height:44px; border-radius:10px;
+  background: linear-gradient(90deg,#2bc0ff,#27e1a6);
+  border:none; color:white; font-weight:700; display:inline-grid; place-items:center;
+}
+
+/* Custom scrollbars for modern browsers */
+.messages::-webkit-scrollbar{ width:10px }
+.messages::-webkit-scrollbar-thumb{ background: linear-gradient(180deg,#e6ecf0,#f3f6f8); border-radius:6px }
+.messages::-webkit-scrollbar-track{ background:transparent }
